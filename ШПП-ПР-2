@@ -1,0 +1,57 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+class User
+{
+public:
+    std::string name;
+    std::string email;
+    std::string role;
+
+    User(const std::string& name,
+         const std::string& email,
+         const std::string& role)
+        : name(name), email(email), role(role) {}
+};
+
+class UserManager
+{
+private:
+    std::vector<User> users;
+
+    int FindUserIndexByEmail(const std::string& email)
+    {
+        for (size_t i = 0; i < users.size(); i++)
+        {
+            if (users[i].email == email)
+                return static_cast<int>(i);
+        }
+        return -1;
+    }
+
+public:
+    void AddUser(const User& user)
+    {
+        users.push_back(user);
+    }
+
+    void RemoveUser(const std::string& email)
+    {
+        int index = FindUserIndexByEmail(email);
+        if (index != -1)
+            users.erase(users.begin() + index);
+    }
+
+    void UpdateUser(const std::string& email,
+                    const std::string& newName,
+                    const std::string& newRole)
+    {
+        int index = FindUserIndexByEmail(email);
+        if (index != -1)
+        {
+            users[index].name = newName;
+            users[index].role = newRole;
+        }
+    }
+};
