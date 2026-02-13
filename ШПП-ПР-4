@@ -1,0 +1,86 @@
+#include <iostream>
+#include <string>
+#include <memory>
+
+class Document {
+public:
+    virtual void Open() = 0;
+    virtual ~Document() {}
+};
+
+class Report : public Document {
+public:
+    void Open() override { std::cout << "Report opened." << std::endl; }
+};
+
+class Resume : public Document {
+public:
+    void Open() override { std::cout << "Resume opened." << std::endl; }
+};
+
+class Letter : public Document {
+public:
+    void Open() override { std::cout << "Letter opened." << std::endl; }
+};
+
+class Invoice : public Document {
+public:
+    void Open() override { std::cout << "Invoice opened." << std::endl; }
+};
+
+class DocumentCreator {
+public:
+    virtual std::unique_ptr<Document> CreateDocument() = 0;
+    virtual ~DocumentCreator() {}
+};
+
+class ReportCreator : public DocumentCreator {
+public:
+    std::unique_ptr<Document> CreateDocument() override { return std::make_unique<Report>(); }
+};
+
+class ResumeCreator : public DocumentCreator {
+public:
+    std::unique_ptr<Document> CreateDocument() override { return std::make_unique<Resume>(); }
+};
+
+class LetterCreator : public DocumentCreator {
+public:
+    std::unique_ptr<Document> CreateDocument() override { return std::make_unique<Letter>(); }
+};
+
+class InvoiceCreator : public DocumentCreator {
+public:
+    std::unique_ptr<Document> CreateDocument() override { return std::make_unique<Invoice>(); }
+};
+
+int main() {
+    std::unique_ptr<DocumentCreator> creator;
+    int choice;
+
+    std::cout << "Select document type (1: Report, 2: Resume, 3: Letter, 4: Invoice): ";
+    if (!(std::cin >> choice)) return 1;
+
+    switch (choice) {
+        case 1:
+            creator = std::make_unique<ReportCreator>();
+            break;
+        case 2:
+            creator = std::make_unique<ResumeCreator>();
+            break;
+        case 3:
+            creator = std::make_unique<LetterCreator>();
+            break;
+        case 4:
+            creator = std::make_unique<InvoiceCreator>();
+            break;
+        default:
+            std::cout << "Invalid choice!" << std::endl;
+            return 1;
+    }
+
+    std::unique_ptr<Document> myDoc = creator->CreateDocument();
+    myDoc->Open();
+
+    return 0;
+}
