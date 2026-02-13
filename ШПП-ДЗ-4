@@ -1,0 +1,224 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+class IVehicle {
+public:
+    virtual void Drive() = 0;
+    virtual void Refuel() = 0;
+    virtual ~IVehicle() {}
+};
+
+// Car
+class Car : public IVehicle {
+private:
+    string brand;
+    string model;
+    string fuelType;
+
+public:
+    Car(string b, string m, string f)
+        : brand(b), model(m), fuelType(f) {}
+
+    void Drive() override {
+        cout << "Car " << brand << " " << model << " is driving." << endl;
+    }
+
+    void Refuel() override {
+        cout << "Refueling car with " << fuelType << "." << endl;
+    }
+};
+
+// Motorcycle
+class Motorcycle : public IVehicle {
+private:
+    string type;
+    int engineVolume;
+
+public:
+    Motorcycle(string t, int v)
+        : type(t), engineVolume(v) {}
+
+    void Drive() override {
+        cout << "Motorcycle (" << type << ", " << engineVolume << "cc) is driving." << endl;
+    }
+
+    void Refuel() override {
+        cout << "Refueling motorcycle." << endl;
+    }
+};
+
+// Truck
+class Truck : public IVehicle {
+private:
+    double capacity;
+    int axles;
+
+public:
+    Truck(double c, int a)
+        : capacity(c), axles(a) {}
+
+    void Drive() override {
+        cout << "Truck with capacity " << capacity << " tons is driving." << endl;
+    }
+
+    void Refuel() override {
+        cout << "Refueling truck." << endl;
+    }
+};
+
+// Bus 
+class Bus : public IVehicle {
+private:
+    int seats;
+    string routeType;
+
+public:
+    Bus(int s, string r)
+        : seats(s), routeType(r) {}
+
+    void Drive() override {
+        cout << "Bus with " << seats << " seats on " << routeType << " route is driving." << endl;
+    }
+
+    void Refuel() override {
+        cout << "Refueling bus." << endl;
+    }
+};
+
+
+class VehicleFactory {
+public:
+    virtual IVehicle* CreateVehicle() = 0;
+    virtual ~VehicleFactory() {}
+};
+
+// CarFactory
+class CarFactory : public VehicleFactory {
+private:
+    string brand, model, fuel;
+
+public:
+    CarFactory(string b, string m, string f)
+        : brand(b), model(m), fuel(f) {}
+
+    IVehicle* CreateVehicle() override {
+        return new Car(brand, model, fuel);
+    }
+};
+
+// MotorcycleFactory
+class MotorcycleFactory : public VehicleFactory {
+private:
+    string type;
+    int volume;
+
+public:
+    MotorcycleFactory(string t, int v)
+        : type(t), volume(v) {}
+
+    IVehicle* CreateVehicle() override {
+        return new Motorcycle(type, volume);
+    }
+};
+
+// TruckFactory
+class TruckFactory : public VehicleFactory {
+private:
+    double capacity;
+    int axles;
+
+public:
+    TruckFactory(double c, int a)
+        : capacity(c), axles(a) {}
+
+    IVehicle* CreateVehicle() override {
+        return new Truck(capacity, axles);
+    }
+};
+
+// BusFactory
+class BusFactory : public VehicleFactory {
+private:
+    int seats;
+    string route;
+
+public:
+    BusFactory(int s, string r)
+        : seats(s), route(r) {}
+
+    IVehicle* CreateVehicle() override {
+        return new Bus(seats, route);
+    }
+};
+
+/* ========= 4. main() ========= */
+
+int main() {
+    int choice;
+    cout << "Choose vehicle:\n";
+    cout << "1 - Car\n";
+    cout << "2 - Motorcycle\n";
+    cout << "3 - Truck\n";
+    cout << "4 - Bus\n";
+    cout << "Your choice: ";
+    cin >> choice;
+
+    VehicleFactory* factory = nullptr;
+
+    if (choice == 1) {
+        string brand, model, fuel;
+        cout << "Brand: ";
+        cin >> brand;
+        cout << "Model: ";
+        cin >> model;
+        cout << "Fuel type: ";
+        cin >> fuel;
+
+        factory = new CarFactory(brand, model, fuel);
+    }
+    else if (choice == 2) {
+        string type;
+        int volume;
+        cout << "Motorcycle type: ";
+        cin >> type;
+        cout << "Engine volume: ";
+        cin >> volume;
+
+        factory = new MotorcycleFactory(type, volume);
+    }
+    else if (choice == 3) {
+        double capacity;
+        int axles;
+        cout << "Load capacity (tons): ";
+        cin >> capacity;
+        cout << "Axles count: ";
+        cin >> axles;
+
+        factory = new TruckFactory(capacity, axles);
+    }
+    else if (choice == 4) {
+        int seats;
+        string route;
+        cout << "Seats: ";
+        cin >> seats;
+        cout << "Route type: ";
+        cin >> route;
+
+        factory = new BusFactory(seats, route);
+    }
+    else {
+        cout << "Invalid choice!" << endl;
+        return 0;
+    }
+
+    IVehicle* vehicle = factory->CreateVehicle();
+    vehicle->Drive();
+    vehicle->Refuel();
+
+    delete vehicle;
+    delete factory;
+
+    return 0;
+}
