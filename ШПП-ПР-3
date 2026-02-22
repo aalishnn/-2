@@ -1,0 +1,280 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <map>
+#include <memory>
+#include <mutex>
+
+using namespace std;
+
+class OrderData {
+public:
+    string productName;
+    int quantity;
+    double price;
+};
+
+class PriceCalculator {
+public:
+    double calculate(const OrderData& order) {
+        return order.quantity * order.price * 0.9;
+    }
+};
+
+class PaymentProcessor {
+public:
+    void process(const string& details) {
+        cout << "Payment processed: " << details << endl;
+    }
+};
+
+class EmailService {
+public:
+    void send(const string& email) {
+        cout << "Email sent to: " << email << endl;
+    }
+};
+
+class Employee {
+public:
+    string name;
+    double baseSalary;
+};
+
+class ISalaryCalculator {
+public:
+    virtual double calculate(const Employee& e) = 0;
+    virtual ~ISalaryCalculator() = default;
+};
+
+class PermanentSalary : public ISalaryCalculator {
+public:
+    double calculate(const Employee& e) override {
+        return e.baseSalary * 1.2;
+    }
+};
+
+class ContractSalary : public ISalaryCalculator {
+public:
+    double calculate(const Employee& e) override {
+        return e.baseSalary * 1.1;
+    }
+};
+
+class InternSalary : public ISalaryCalculator {
+public:
+    double calculate(const Employee& e) override {
+        return e.baseSalary * 0.8;
+    }
+};
+
+class IPrint {
+public:
+    virtual void print(const string&) = 0;
+};
+
+class IScan {
+public:
+    virtual void scan(const string&) = 0;
+};
+
+class IFax {
+public:
+    virtual void fax(const string&) = 0;
+};
+
+class BasicPrinter : public IPrint {
+public:
+    void print(const string& text) override {
+        cout << "Printing: " << text << endl;
+    }
+};
+
+class AllInOnePrinter : public IPrint, public IScan, public IFax {
+public:
+    void print(const string& text) override {
+        cout << "Printing: " << text << endl;
+    }
+    void scan(const string& text) override {
+        cout << "Scanning: " << text << endl;
+    }
+    void fax(const string& text) override {
+        cout << "Faxing: " << text << endl;
+    }
+};
+
+class INotification {
+public:
+    virtual void send(const string&) = 0;
+    virtual ~INotification() = default;
+};
+
+class EmailNotification : public INotification {
+public:
+    void send(const string& msg) override {
+        cout << "Email: " << msg << endl;
+    }
+};
+
+class SmsNotification : public INotification {
+public:
+    void send(const string& msg) override {
+        cout << "SMS: " << msg << endl;
+    }
+};
+
+class NotificationService {
+    shared_ptr<INotification> notifier;
+public:
+    NotificationService(shared_ptr<INotification> n) : notifier(n) {}
+    void notify(const string& msg) {
+        notifier->send(msg);
+    }
+};
+
+class ConfigurationManager {
+private:
+    static ConfigurationManager* instance;
+    static mutex mtx;
+    map<string, string> settings;
+
+    ConfigurationManager() {}
+
+public:
+    static ConfigurationManager* getInstance() {
+        lock_guard<mutex> lock(mtx);
+        if (!instance)
+            instance = new ConfigurationManager();
+        return instance;
+    }
+
+    void set(const string& key, const string& value) {
+        settings[key] = value;
+    }
+
+    string get(const string& key) {
+        if (settings.find(key) == settings.end())
+            throw runtime_error("Setting not found");
+        return settings[key];
+    }
+};
+
+ConfigurationManager* ConfigurationManager::instance = nullptr;
+mutex ConfigurationManager::mtx;
+
+class Report {
+public:
+    string header;
+    string content;
+    string footer;
+
+    void show() {
+        cout << header << endl << content << endl << footer << endl;
+    }
+};
+
+class IReportBuilder {
+public:
+    virtual void setHeader(const string&) = 0;
+    virtual void setContent(const string&) = 0;
+    virtual void setFooter(const string&) = 0;
+    virtual Report getReport() = 0;
+};
+
+class TextReportBuilder : public IReportBuilder {
+    Report report;
+public:
+    void setHeader(const string& h) override { report.header = h; }
+    void setContent(const string& c) override { report.content = c; }
+    void setFooter(const string& f) override { report.footer = f; }
+    Report getReport() override { return report; }
+};
+
+class HtmlReportBuilder : public IReportBuilder {
+    Report report;
+public:
+    void setHeader(const string& h) override { report.header = "<h1>" + h + "</h1>"; }
+    void setContent(const string& c) override { report.content = "<p>" + c + "</p>"; }
+    void setFooter(const string& f) override { report.footer = "<footer>" + f + "</footer>"; }
+    Report getReport() override { return report; }
+};
+
+class ReportDirector {
+public:
+    void construct(IReportBuilder& builder) {
+        builder.setHeader("Report Header");
+        builder.setContent("Main Content");
+        builder.setFooter("Footer");
+    }
+};
+
+class Product : public ICloneable {
+public:
+    string name;
+    double price;
+
+    Product(string n, double p) : name(n), price(p) {}
+
+    Product* clone() const {
+        return new Product(*this);
+    }
+};
+
+class Discount : public ICloneable {
+public:
+    double percent;
+
+    Discount(double p) : percent(p) {}
+
+    Discount* clone() const {
+        return new Discount(*this);
+    }
+};
+
+class OrderPrototype {
+public:
+    vector<Product*> products;
+    Discount* discount;
+    double deliveryCost;
+    string paymentMethod;
+
+    OrderPrototype(const OrderPrototype& other) {
+        for (auto p : other.products)
+            products.push_back(p->clone());
+        discount = other.discount->clone();
+        deliveryCost = other.deliveryCost;
+        paymentMethod = other.paymentMethod;
+    }
+
+    ~OrderPrototype() {
+        for (auto p : products) delete p;
+        delete discount;
+    }
+};
+
+int main() {
+
+    auto config = ConfigurationManager::getInstance();
+    config->set("mode", "production");
+    cout << "Config mode: " << config->get("mode") << endl;
+
+    TextReportBuilder textBuilder;
+    ReportDirector director;
+    director.construct(textBuilder);
+    Report report = textBuilder.getReport();
+    report.show();
+
+    OrderPrototype original({
+        new Product("Laptop", 500000),
+        new Product("Mouse", 5000)
+    }, new Discount(10), 2000, "Card");
+
+    OrderPrototype copy = original;
+
+    cout << "Prototype cloned successfully\n";
+
+    NotificationService service(make_shared<EmailNotification>());
+    service.notify("Order completed");
+
+    return 0;
+}
