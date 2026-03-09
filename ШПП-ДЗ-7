@@ -1,0 +1,297 @@
+using System;
+using System.Collections.Generic;
+
+namespace DesignPatternsModule07
+{
+
+interface ICommand
+{
+    void Execute();
+    void Undo();
+}
+
+// Devices
+class Light
+{
+    public void On() => Console.WriteLine("Light ON");
+    public void Off() => Console.WriteLine("Light OFF");
+}
+
+class Door
+{
+    public void Open() => Console.WriteLine("Door OPEN");
+    public void Close() => Console.WriteLine("Door CLOSED");
+}
+
+class Thermostat
+{
+    private int temp = 20;
+
+    public void Increase()
+    {
+        temp++;
+        Console.WriteLine("Temperature: " + temp);
+    }
+
+    public void Decrease()
+    {
+        temp--;
+        Console.WriteLine("Temperature: " + temp);
+    }
+}
+
+// Commands
+class LightOnCommand : ICommand
+{
+    private Light light;
+
+    public LightOnCommand(Light light)
+    {
+        this.light = light;
+    }
+
+    public void Execute() => light.On();
+
+    public void Undo() => light.Off();
+}
+
+class DoorOpenCommand : ICommand
+{
+    private Door door;
+
+    public DoorOpenCommand(Door door)
+    {
+        this.door = door;
+    }
+
+    public void Execute() => door.Open();
+
+    public void Undo() => door.Close();
+}
+
+class TempUpCommand : ICommand
+{
+    private Thermostat thermostat;
+
+    public TempUpCommand(Thermostat thermostat)
+    {
+        this.thermostat = thermostat;
+    }
+
+    public void Execute() => thermostat.Increase();
+
+    public void Undo() => thermostat.Decrease();
+}
+
+// Invoker
+class RemoteControl
+{
+    private Stack<ICommand> history = new Stack<ICommand>();
+
+    public void ExecuteCommand(ICommand command)
+    {
+        command.Execute();
+        history.Push(command);
+    }
+
+    public void Undo()
+    {
+        if (history.Count > 0)
+        {
+            ICommand command = history.Pop();
+            command.Undo();
+        }
+        else
+        {
+            Console.WriteLine("No commands to undo");
+        }
+    }
+}
+
+
+
+abstract class Beverage
+{
+    public void PrepareRecipe()
+    {
+        BoilWater();
+        Brew();
+        PourInCup();
+
+        if (CustomerWantsCondiments())
+            AddCondiments();
+    }
+
+    void BoilWater()
+    {
+        Console.WriteLine("Boiling water");
+    }
+
+    void PourInCup()
+    {
+        Console.WriteLine("Pouring into cup");
+    }
+
+    protected abstract void Brew();
+    protected abstract void AddCondiments();
+
+    protected virtual bool CustomerWantsCondiments()
+    {
+        return true;
+    }
+}
+
+class Tea : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Steeping tea");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Adding lemon");
+    }
+}
+
+class Coffee : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Brewing coffee");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Adding sugar and milk");
+    }
+
+    protected override bool CustomerWantsCondiments()
+    {
+        Console.WriteLine("Add sugar and milk? (y/n)");
+
+        string answer = Console.ReadLine();
+
+        return answer.ToLower() == "y";
+    }
+}
+
+class HotChocolate : Beverage
+{
+    protected override void Brew()
+    {
+        Console.WriteLine("Mixing hot chocolate");
+    }
+
+    protected override void AddCondiments()
+    {
+        Console.WriteLine("Adding marshmallows");
+    }
+}
+
+
+
+interface IMediator
+{
+    void SendMessage(string message, User user);
+    void AddUser(User user);
+}
+
+class ChatRoom : IMediator
+{
+    private List<User> users = new List<User>();
+
+    public void AddUser(User user)
+    {
+        users.Add(user);
+        Console.WriteLine(user.Name + " joined the chat");
+    }
+
+    public void SendMessage(string message, User sender)
+    {
+        foreach (var user in users)
+        {
+            if (user != sender)
+            {
+                user.Receive(message, sender.Name);
+            }
+        }
+    }
+}
+
+class User
+{
+    private IMediator mediator;
+
+    public string Name { get; }
+
+    public User(string name, IMediator mediator)
+    {
+        Name = name;
+        this.mediator = mediator;
+    }
+
+    public void Send(string message)
+    {
+        mediator.SendMessage(message, this);
+    }
+
+    public void Receive(string message, string sender)
+    {
+        Console.WriteLine(sender + " -> " + Name + ": " + message);
+    }
+}
+
+
+
+
+class Program
+{
+    static void Main()
+    {
+
+        Console.WriteLine("===== COMMAND PATTERN =====");
+
+        Light light = new Light();
+        Door door = new Door();
+        Thermostat thermostat = new Thermostat();
+
+        RemoteControl remote = new RemoteControl();
+
+        remote.ExecuteCommand(new LightOnCommand(light));
+        remote.ExecuteCommand(new DoorOpenCommand(door));
+        remote.ExecuteCommand(new TempUpCommand(thermostat));
+
+        remote.Undo();
+
+
+        Console.WriteLine("\n===== TEMPLATE METHOD =====");
+
+        Beverage tea = new Tea();
+        tea.PrepareRecipe();
+
+        Beverage coffee = new Coffee();
+        coffee.PrepareRecipe();
+
+        Beverage chocolate = new HotChocolate();
+        chocolate.PrepareRecipe();
+
+
+        Console.WriteLine("\n===== MEDIATOR =====");
+
+        ChatRoom chat = new ChatRoom();
+
+        User u1 = new User("Alice", chat);
+        User u2 = new User("Bob", chat);
+        User u3 = new User("Charlie", chat);
+
+        chat.AddUser(u1);
+        chat.AddUser(u2);
+        chat.AddUser(u3);
+
+        u1.Send("Hello everyone!");
+        u2.Send("Hi Alice!");
+    }
+}
+
+}
