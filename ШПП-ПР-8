@@ -1,0 +1,304 @@
+using System;
+
+public interface IReport
+{
+    string Generate();
+}
+
+// Базовые отчеты
+public class SalesReport : IReport
+{
+    public string Generate()
+    {
+        return "Sales: [100, 200, 300]";
+    }
+}
+
+public class UserReport : IReport
+{
+    public string Generate()
+    {
+        return "Users: [Ali, Dana, John]";
+    }
+}
+
+// Абстрактный декоратор
+public abstract class ReportDecorator : IReport
+{
+    protected IReport report;
+
+    public ReportDecorator(IReport report)
+    {
+        this.report = report;
+    }
+
+    public virtual string Generate()
+    {
+        return report.Generate();
+    }
+}
+
+// Фильтр по датам
+public class DateFilterDecorator : ReportDecorator
+{
+    public DateFilterDecorator(IReport report) : base(report) { }
+
+    public override string Generate()
+    {
+        return base.Generate() + " | Filtered by date";
+    }
+}
+
+// Сортировка
+public class SortingDecorator : ReportDecorator
+{
+    public SortingDecorator(IReport report) : base(report) { }
+
+    public override string Generate()
+    {
+        return base.Generate() + " | Sorted";
+    }
+}
+
+// Фильтр по сумме
+public class AmountFilterDecorator : ReportDecorator
+{
+    public AmountFilterDecorator(IReport report) : base(report) { }
+
+    public override string Generate()
+    {
+        return base.Generate() + " | Filtered by amount";
+    }
+}
+
+// CSV экспорт
+public class CsvExportDecorator : ReportDecorator
+{
+    public CsvExportDecorator(IReport report) : base(report) { }
+
+    public override string Generate()
+    {
+        return base.Generate() + " | Exported to CSV";
+    }
+}
+
+// PDF экспорт
+public class PdfExportDecorator : ReportDecorator
+{
+    public PdfExportDecorator(IReport report) : base(report) { }
+
+    public override string Generate()
+    {
+        return base.Generate() + " | Exported to PDF";
+    }
+}
+
+
+
+
+public interface IInternalDeliveryService
+{
+    void DeliverOrder(string orderId);
+    string GetDeliveryStatus(string orderId);
+    double CalculateCost(string orderId);
+}
+
+// Внутренняя служба
+public class InternalDeliveryService : IInternalDeliveryService
+{
+    public void DeliverOrder(string orderId)
+    {
+        Console.WriteLine($"Internal delivery for {orderId}");
+    }
+
+    public string GetDeliveryStatus(string orderId)
+    {
+        return "Delivered";
+    }
+
+    public double CalculateCost(string orderId)
+    {
+        return 10.0;
+    }
+}
+
+// ===== External A =====
+public class ExternalLogisticsServiceA
+{
+    public void ShipItem(int itemId)
+    {
+        Console.WriteLine($"ServiceA shipping item {itemId}");
+    }
+
+    public string TrackShipment(int shipmentId)
+    {
+        return "In transit (A)";
+    }
+
+    public double GetPrice(int id)
+    {
+        return 15.0;
+    }
+}
+
+// Adapter A
+public class LogisticsAdapterA : IInternalDeliveryService
+{
+    private ExternalLogisticsServiceA service = new ExternalLogisticsServiceA();
+
+    public void DeliverOrder(string orderId)
+    {
+        try
+        {
+            service.ShipItem(int.Parse(orderId));
+        }
+        catch
+        {
+            Console.WriteLine("Error in AdapterA");
+        }
+    }
+
+    public string GetDeliveryStatus(string orderId)
+    {
+        return service.TrackShipment(int.Parse(orderId));
+    }
+
+    public double CalculateCost(string orderId)
+    {
+        return service.GetPrice(int.Parse(orderId));
+    }
+}
+
+// ===== External B =====
+public class ExternalLogisticsServiceB
+{
+    public void SendPackage(string info)
+    {
+        Console.WriteLine($"ServiceB sending {info}");
+    }
+
+    public string CheckPackageStatus(string code)
+    {
+        return "Delivered (B)";
+    }
+
+    public double Price(string code)
+    {
+        return 20.0;
+    }
+}
+
+// Adapter B
+public class LogisticsAdapterB : IInternalDeliveryService
+{
+    private ExternalLogisticsServiceB service = new ExternalLogisticsServiceB();
+
+    public void DeliverOrder(string orderId)
+    {
+        try
+        {
+            service.SendPackage(orderId);
+        }
+        catch
+        {
+            Console.WriteLine("Error in AdapterB");
+        }
+    }
+
+    public string GetDeliveryStatus(string orderId)
+    {
+        return service.CheckPackageStatus(orderId);
+    }
+
+    public double CalculateCost(string orderId)
+    {
+        return service.Price(orderId);
+    }
+}
+
+// ===== External C (жаңа) =====
+public class ExternalLogisticsServiceC
+{
+    public void StartDelivery(string id)
+    {
+        Console.WriteLine($"ServiceC delivering {id}");
+    }
+
+    public string Status(string id)
+    {
+        return "Pending (C)";
+    }
+
+    public double Cost(string id)
+    {
+        return 25.0;
+    }
+}
+
+public class LogisticsAdapterC : IInternalDeliveryService
+{
+    private ExternalLogisticsServiceC service = new ExternalLogisticsServiceC();
+
+    public void DeliverOrder(string orderId)
+    {
+        service.StartDelivery(orderId);
+    }
+
+    public string GetDeliveryStatus(string orderId)
+    {
+        return service.Status(orderId);
+    }
+
+    public double CalculateCost(string orderId)
+    {
+        return service.Cost(orderId);
+    }
+}
+
+
+
+
+public class DeliveryServiceFactory
+{
+    public static IInternalDeliveryService GetService(string type)
+    {
+        return type switch
+        {
+            "internal" => new InternalDeliveryService(),
+            "A" => new LogisticsAdapterA(),
+            "B" => new LogisticsAdapterB(),
+            "C" => new LogisticsAdapterC(),
+            _ => throw new Exception("Unknown service")
+        };
+    }
+}
+
+
+
+
+class Program
+{
+    static void Main()
+    {
+        Console.WriteLine("=== REPORT ===");
+
+        // Декоратор комбинациясы
+        IReport report = new SalesReport();
+        report = new DateFilterDecorator(report);
+        report = new SortingDecorator(report);
+        report = new CsvExportDecorator(report);
+
+        Console.WriteLine(report.Generate());
+
+        Console.WriteLine("\n=== DELIVERY ===");
+
+        var service = DeliveryServiceFactory.GetService("A");
+
+        string orderId = "123";
+
+        service.DeliverOrder(orderId);
+
+        Console.WriteLine("Status: " + service.GetDeliveryStatus(orderId));
+        Console.WriteLine("Cost: " + service.CalculateCost(orderId));
+    }
+}
