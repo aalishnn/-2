@@ -1,0 +1,156 @@
+using System;
+
+// 1. Интерфейс
+public abstract class Beverage
+{
+    public abstract string GetDescription();
+    public abstract double Cost();
+}
+
+// 2. Нақты сусындар
+public class Espresso : Beverage
+{
+    public override string GetDescription() => "Espresso";
+    public override double Cost() => 2.0;
+}
+
+public class Tea : Beverage
+{
+    public override string GetDescription() => "Tea";
+    public override double Cost() => 1.5;
+}
+
+public class Latte : Beverage
+{
+    public override string GetDescription() => "Latte";
+    public override double Cost() => 2.5;
+}
+
+public class Mocha : Beverage
+{
+    public override string GetDescription() => "Mocha";
+    public override double Cost() => 3.0;
+}
+
+// 3. Абстракт декоратор
+public abstract class BeverageDecorator : Beverage
+{
+    protected Beverage beverage;
+
+    public BeverageDecorator(Beverage beverage)
+    {
+        this.beverage = beverage;
+    }
+}
+
+// 4. Қосымшалар (декораторлар)
+
+public class Milk : BeverageDecorator
+{
+    public Milk(Beverage beverage) : base(beverage) { }
+
+    public override string GetDescription() => beverage.GetDescription() + ", Milk";
+    public override double Cost() => beverage.Cost() + 0.5;
+}
+
+public class Sugar : BeverageDecorator
+{
+    public Sugar(Beverage beverage) : base(beverage) { }
+
+    public override string GetDescription() => beverage.GetDescription() + ", Sugar";
+    public override double Cost() => beverage.Cost() + 0.2;
+}
+
+public class WhippedCream : BeverageDecorator
+{
+    public WhippedCream(Beverage beverage) : base(beverage) { }
+
+    public override string GetDescription() => beverage.GetDescription() + ", Whipped Cream";
+    public override double Cost() => beverage.Cost() + 0.7;
+}
+
+
+
+// 1. Интерфейс
+public interface IPaymentProcessor
+{
+    void ProcessPayment(double amount);
+}
+
+// 2. PayPal
+public class PayPalPaymentProcessor : IPaymentProcessor
+{
+    public void ProcessPayment(double amount)
+    {
+        Console.WriteLine($"Paid {amount}$ via PayPal");
+    }
+}
+
+// 3. Сторонний Stripe
+public class StripePaymentService
+{
+    public void MakeTransaction(double totalAmount)
+    {
+        Console.WriteLine($"Paid {totalAmount}$ via Stripe");
+    }
+}
+
+// 4. Adapter
+public class StripePaymentAdapter : IPaymentProcessor
+{
+    private StripePaymentService stripe = new StripePaymentService();
+
+    public void ProcessPayment(double amount)
+    {
+        stripe.MakeTransaction(amount);
+    }
+}
+
+// 5. Тағы бір сервис (қосымша)
+public class CryptoPaymentService
+{
+    public void SendCrypto(double sum)
+    {
+        Console.WriteLine($"Paid {sum}$ via Crypto");
+    }
+}
+
+public class CryptoAdapter : IPaymentProcessor
+{
+    private CryptoPaymentService crypto = new CryptoPaymentService();
+
+    public void ProcessPayment(double amount)
+    {
+        crypto.SendCrypto(amount);
+    }
+}
+
+
+
+class Program
+{
+    static void Main()
+    {
+        // ===== Decorator тест =====
+        Beverage drink = new Espresso();
+        drink = new Milk(drink);
+        drink = new Sugar(drink);
+        drink = new WhippedCream(drink);
+
+        Console.WriteLine("Order:");
+        Console.WriteLine(drink.GetDescription());
+        Console.WriteLine("Total cost: " + drink.Cost());
+
+        Console.WriteLine("\n--- Payments ---");
+
+        // ===== Adapter тест =====
+        IPaymentProcessor paypal = new PayPalPaymentProcessor();
+        paypal.ProcessPayment(drink.Cost());
+
+        IPaymentProcessor stripe = new StripePaymentAdapter();
+        stripe.ProcessPayment(drink.Cost());
+
+        IPaymentProcessor crypto = new CryptoAdapter();
+        crypto.ProcessPayment(drink.Cost());
+    }
+}
