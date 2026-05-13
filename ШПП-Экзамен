@@ -1,0 +1,32 @@
+interface IAuth {
+    void login(String u, String p);
+    void logout();
+}
+
+class OAuthAdapter implements IAuth {
+    public void login(String u, String p) {
+        System.out.println("Вход через OAuth: " + u);
+    }
+    public void logout() {
+        System.out.println("Выход из OAuth");
+    }
+}
+
+class LDAPAdapter implements IAuth {
+    public void login(String u, String p) {
+        System.out.println("Вход через LDAP: " + u);
+    }
+    public void logout() {
+        System.out.println("Выход из LDAP");
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        IAuth s = new OAuthAdapter();
+        s.login("Nesibeli", "123");
+        
+        IAuth s2 = new LDAPAdapter();
+        s2.login("Admin", "admin123");
+    }
+}
